@@ -1564,10 +1564,10 @@ namespace Xbim.Ifc4
 		/// <summary>
         /// Gets the Ifc Schema version of the model if this is IFC schema
         /// </summary>
-		public IfcSchemaVersion SchemaVersion { 
+		public XbimSchemaVersion SchemaVersion { 
 			get
 			{
-				return IfcSchemaVersion.Ifc4;
+				return XbimSchemaVersion.Ifc4;
 			}
 		}
 
