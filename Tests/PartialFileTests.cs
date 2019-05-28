@@ -5,9 +5,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Xbim.Common;
+using Xbim.Common.Step21;
+using Xbim.Ifc;
 using Xbim.Ifc2x3;
 using Xbim.Ifc2x3.GeometricModelResource;
 using Xbim.Ifc4.Interfaces;
+using Xbim.Ifc4.ProductExtension;
+using Xbim.Ifc4.SharedBldgElements;
 using Xbim.IO;
 using Xbim.IO.Memory;
 
@@ -99,59 +103,47 @@ namespace Xbim.IfcCore.UnitTests
         }
 
         [TestMethod]
-        public void WeakReferenceTest()
+        [DeploymentItem("TestFiles\\SampleHouse4.ifc")]
+        public void CreatingPartialFileWithStore()
         {
-            var count = 10000000;
-
-            var weakCounter = new Counter();
-            var weak = new ObjectWithWeakReference() { Counter = weakCounter };
-            var strong = new ObjectWithStrongReference();
-
-            var w = Stopwatch.StartNew();
-            for (int i = 0; i < count; i++)
+            
+            using (var source = IfcStore.Open("SampleHouse4.ifc"))
             {
-                weak.Counter.Count++;
-            }
-            w.Stop();
-            Console.WriteLine($"Weak time: {w.ElapsedMilliseconds}ms");
+                    
+                var products = source.Instances.OfType<IfcBuildingElement>();
 
-            w.Restart();
-            for (int i = 0; i < count; i++)
-            {
-                strong.Counter.Count++;
-            }
-            w.Stop();
-            Console.WriteLine($"Strong time: {w.ElapsedMilliseconds}ms");
-
-            Assert.IsTrue(weak.Counter.Count == strong.Counter.Count);
-        }
-
-        private class ObjectWithWeakReference
-        {
-            private WeakReference<Counter> _reference = new WeakReference<Counter>(new Counter());
-            public Counter Counter
-            {
-                get
+                using (var target = IfcStore.Create(source.SchemaVersion, XbimStoreType.InMemoryModel))
+                using(var txn = target.BeginTransaction("Insert Copy"))
                 {
-                    if (_reference.TryGetTarget(out Counter c))
-                        return c;
-                    return null;
+                    var map = new XbimInstanceHandleMap(source, target);
+                    target.InsertCopy(products, true, false, map);
+
+                    txn.Commit();
+
+                    var expected = products.Count();
+                    var actual = target.Instances.OfType<IfcBuildingElement>().Count();
+
+                    Assert.AreEqual(expected, actual);
+
+                    var owners = target.Instances.OfType<IIfcOwnerHistory>();
+
+                    Assert.IsTrue(owners.Count() > 0);
+
                 }
-                set
-                {
-                    _reference = new WeakReference<Counter>(value);
-                }
+
             }
+            
         }
 
-        private class ObjectWithStrongReference
+        [TestMethod]
+        public void NewStoreModelIsEmptyByDefault()
         {
-            public Counter Counter { get; set; } = new Counter();
-        }
+            using (var model = IfcStore.Create(XbimSchemaVersion.Ifc4x1, XbimStoreType.InMemoryModel))
+            {
+                var instances = model.Instances;
 
-        private class Counter
-        {
-            public int Count { get; set; } = 0;
+                Assert.AreEqual(0, instances.Count());
+            }
         }
     }
 }

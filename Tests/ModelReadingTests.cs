@@ -11,6 +11,15 @@ namespace Xbim.IfcCore.UnitTests
     {
 
         [TestMethod]
+        [DeploymentItem("TestFiles/RadianValuesOverPI.ifc")]
+        public void RadianValuesOverPITest()
+        {
+            using (var mm = MemoryModel.OpenRead("RadianValuesOverPI.ifc"))
+            {
+                Assert.IsTrue(mm.ModelFactors.AngleToRadiansConversionFactor == 1);
+            }
+        }
+        [TestMethod]
         [DeploymentItem("TestFiles/Axis2PlacementError.ifc")]
         public void OpenReadModelFactorPrecisionTest()
         {
@@ -67,6 +76,16 @@ namespace Xbim.IfcCore.UnitTests
             using (var mm = MemoryModel.OpenRead("SmallModelIfc4.ifczip"))
             {
                 Assert.IsTrue(mm.Instances.Count == 52);
+            }
+        }
+
+        [TestMethod]
+        [DeploymentItem("TestFiles/HelloWallXml.ifczip")]
+        public void OpenReadIfc4XmlZipFormatTest()
+        {
+            using (var mm = MemoryModel.OpenRead("HelloWallXml.ifczip"))
+            {
+                Assert.AreEqual(163, mm.Instances.Count);
             }
         }
 

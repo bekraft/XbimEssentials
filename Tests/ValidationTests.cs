@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Xbim.Common;
 using Xbim.Common.Enumerations;
+using Xbim.Common.ExpressValidation;
 using Xbim.Ifc;
 using Xbim.Ifc.Validation;
 using Xbim.Ifc2x3.HVACDomain;
-using Xbim.Ifc2x3.Kernel;
 
 namespace Xbim.Essentials.Tests
 {
@@ -27,7 +24,7 @@ namespace Xbim.Essentials.Tests
                 //    .Where(x => x.Properties.Any(pr => pr.Value.EntityAttribute.State == EntityAttributeState.Mandatory
                 //    && typeof(IExpressValueType).IsAssignableFrom(pr.Value.PropertyInfo.PropertyType)
                 //    ));
-                var v = new IfcValidator
+                var v = new Validator
                 {
                     ValidateLevel = ValidationFlags.All,
                     CreateEntityHierarchy = true
@@ -47,7 +44,7 @@ namespace Xbim.Essentials.Tests
             var path = @"properties.ifc";
             using (var store = Xbim.Ifc.IfcStore.Open(path))
             {
-                var v = new IfcValidator
+                var v = new Validator
                 {
                     ValidateLevel = ValidationFlags.All,
                     CreateEntityHierarchy = true
@@ -67,7 +64,7 @@ namespace Xbim.Essentials.Tests
                 //    .Where(x => x.Properties.Any(pr => pr.Value.EntityAttribute.State == EntityAttributeState.Mandatory
                 //    && typeof(IExpressValueType).IsAssignableFrom(pr.Value.PropertyInfo.PropertyType)
                 //    ));
-                var v = new IfcValidator
+                var v = new Validator
                 {
                     ValidateLevel = ValidationFlags.All,
                     CreateEntityHierarchy = true
@@ -87,7 +84,7 @@ namespace Xbim.Essentials.Tests
         {
             using (var model = IfcStore.Open("AlmostEmptyIFC4.ifc", null, 0))
             {
-                var v = new IfcValidator
+                var v = new Validator
                 {
                     ValidateLevel = ValidationFlags.All,
                     CreateEntityHierarchy = true
@@ -112,7 +109,7 @@ namespace Xbim.Essentials.Tests
         {
             using (var model = IfcStore.Open("ValidationTests2x3.ifc", null, 0))
             {
-                var v = new IfcValidator
+                var v = new Validator
                 {
                     ValidateLevel = ValidationFlags.All,
                     CreateEntityHierarchy = true

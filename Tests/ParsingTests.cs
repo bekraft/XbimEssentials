@@ -1,17 +1,16 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xbim.Common;
 using Xbim.Common.Step21;
 using Xbim.Ifc;
 using Xbim.Ifc2x3.SharedBldgElements;
+using Xbim.Ifc4.Interfaces;
 using Xbim.IO;
 using Xbim.IO.Parser;
 using Xbim.IO.Step21;
-using Xbim.Ifc4.Interfaces;
 
 namespace Xbim.Essentials.Tests
 {
@@ -50,6 +49,53 @@ namespace Xbim.Essentials.Tests
                 store.Close();
             }
         }
+
+        [TestMethod]
+        [DeploymentItem(@"TestFiles\InvalidTriangulatedFaceSet.ifc")]
+        public void ToleratesListOfListsOfInts()
+        {
+            // should survive parsing file with list of lists of ints instead of list of ints
+            using (var store = IfcStore.Open(@"InvalidTriangulatedFaceSet.ifc"))
+            {
+                var faceset = store.Instances.First() as IIfcTriangulatedFaceSet;
+                Assert.IsNotNull(faceset);
+                var pnIndex = faceset.PnIndex;
+                Assert.IsNotNull(pnIndex);
+                Assert.IsTrue(pnIndex.Count > 0);
+            }
+
+            // make sure Esent will work in the same way
+            using (var store = IfcStore.Open(@"InvalidTriangulatedFaceSet.ifc", null, 0))
+            {
+                var faceset = store.Instances.First() as IIfcTriangulatedFaceSet;
+                Assert.IsNotNull(faceset);
+                var pnIndex = faceset.PnIndex;
+                Assert.IsNotNull(pnIndex);
+                Assert.IsTrue(pnIndex.Count > 0);
+            }
+        }
+
+        [TestMethod]
+        [DeploymentItem(@"TestFiles\InvalidMonetaryUnit.ifc")]
+        public void ToleratesStringInsteadOfEnum()
+        {
+            // should survive parsing file with enum value encoded as a string
+            using (var store = IfcStore.Open(@"InvalidMonetaryUnit.ifc"))
+            {
+                var mUnit = store.Instances.First() as Ifc2x3.MeasureResource.IfcMonetaryUnit;
+                Assert.IsNotNull(mUnit);
+                Assert.AreEqual(Ifc2x3.MeasureResource.IfcCurrencyEnum.AUD, mUnit.Currency);
+            }
+
+            // make sure Esent will work in the same way
+            using (var store = IfcStore.Open(@"InvalidMonetaryUnit.ifc", null, 0))
+            {
+                var mUnit = store.Instances.First() as Ifc2x3.MeasureResource.IfcMonetaryUnit;
+                Assert.IsNotNull(mUnit);
+                Assert.AreEqual(Ifc2x3.MeasureResource.IfcCurrencyEnum.AUD, mUnit.Currency);
+            }
+        }
+
 
         [TestMethod]
         [DeploymentItem(@"TestFiles\InvalidType.ifc")]
@@ -449,23 +495,28 @@ namespace Xbim.Essentials.Tests
                 store.Close();
             }
 
-            var schemaVersion = IfcStore.GetXbimSchemaVersion("Esent2X3.ifc");
+            var modelStore = new HeuristicModelProvider();
+            var schemaVersion = modelStore.GetXbimSchemaVersion("Esent2X3.ifc");
             Assert.IsTrue(schemaVersion == XbimSchemaVersion.Ifc2X3);
-            schemaVersion = IfcStore.GetXbimSchemaVersion("Esent4.ifc");
+            schemaVersion = modelStore.GetXbimSchemaVersion("Esent4.ifc");
             Assert.IsTrue(schemaVersion == XbimSchemaVersion.Ifc4);
-            schemaVersion = IfcStore.GetXbimSchemaVersion("Memory2X3.ifc");
+            schemaVersion = modelStore.GetXbimSchemaVersion("Memory2X3.ifc");
             Assert.IsTrue(schemaVersion == XbimSchemaVersion.Ifc2X3);
-            schemaVersion = IfcStore.GetXbimSchemaVersion("Memory4.ifc");
+            schemaVersion = modelStore.GetXbimSchemaVersion("Memory4.ifc");
             Assert.IsTrue(schemaVersion == XbimSchemaVersion.Ifc4);
         }
+
+        
 
         [TestMethod]
         [DeploymentItem("TestFiles")]
         public void ReadIfcHeaderTest()
         {
-            var schemaVersion = IfcStore.GetXbimSchemaVersion("SampleHouse4.ifc");
+            var modelStore = new HeuristicModelProvider();
+
+            var schemaVersion = modelStore.GetXbimSchemaVersion("SampleHouse4.ifc");
             Assert.IsTrue(schemaVersion==XbimSchemaVersion.Ifc4);
-            schemaVersion = IfcStore.GetXbimSchemaVersion("4walls1floorSite.ifc");
+            schemaVersion = modelStore.GetXbimSchemaVersion("4walls1floorSite.ifc");
             Assert.IsTrue(schemaVersion==XbimSchemaVersion.Ifc2X3);
 
             //first run with a memory model opeing Ifc4 file
@@ -604,6 +655,81 @@ namespace Xbim.Essentials.Tests
                 Assert.IsTrue(count == originalCount, "Should have more than zero instances"); //read mode is working                              
                 ifcStore.Close();
             }
+        }
+
+        [TestMethod]
+        [DeploymentItem("TestFiles")]
+        public void FileBasedStore_Should_TidyUp_OnClose()
+        {
+            string xbimFile;
+            // Load with Esent/File-based store - creates a temp xbim file in %TEMP%
+            using (var ifcStore = IfcStore.Open("4walls1floorSite.ifc", null, 0))
+            {
+                xbimFile = ifcStore.Location;
+                Assert.IsTrue(File.Exists(xbimFile));
+                ifcStore.Close();
+            }
+
+            Assert.IsFalse(File.Exists(xbimFile));
+        }
+
+        [TestMethod]
+        [DeploymentItem("TestFiles")]
+        public void Issue206_FileBasedStore_Should_TidyUp_JFM_on_Close()
+        {
+            string xbimFile;
+            string flushmapFile;
+            // Load with Esent/File-based store - creates a temp xbim file in %TEMP%
+            using (var ifcStore = IfcStore.Open("Issue206.zip", ifcDatabaseSizeThreshHold: 0))
+            {
+                xbimFile = ifcStore.Location;
+                flushmapFile = Path.ChangeExtension(xbimFile, ".jfm");
+                Assert.IsTrue(File.Exists(xbimFile), "XBIM file expected to be found");
+                Assert.IsTrue(File.Exists(flushmapFile), "JFM file expected to be found");
+                ifcStore.Close();
+            }
+
+            Assert.IsFalse(File.Exists(xbimFile), "XBIM file expected to be deleted");
+            Assert.IsFalse(File.Exists(flushmapFile), "JFM file expected to be deleted");
+        }
+
+
+        [TestMethod]
+        [DeploymentItem("TestFiles")]
+        public void FileBasedStore_Should_Retain_Saved_XBIM_Files()
+        {
+            string transientXbimFile;
+            string savedXBimFile = Path.ChangeExtension(Guid.NewGuid().ToString(), ".xbim");
+
+            // Load with Esent/File-based store - creates a temp xbim file in %TEMP%
+            using (var ifcStore = IfcStore.Open("4walls1floorSite.ifc", null, 0))
+            {
+                transientXbimFile = ifcStore.Location;
+                
+                ifcStore.SaveAs(savedXBimFile);
+                ifcStore.Close();
+            }
+            Assert.IsTrue(File.Exists(savedXBimFile));
+            Assert.IsFalse(File.Exists(transientXbimFile));
+        }
+
+        [TestMethod]
+        [DeploymentItem("TestFiles")]
+        public void FileBasedStore_Should_Not_retain_Saving_as_Same_file()
+        {
+            // Tests a special case - saving a transient xbim over itself
+            // TODO: In theory could make this disable the transient behaviour
+            string transientXbimFile;
+            
+            // Load with Esent/File-based store - creates a temp xbim file in %TEMP%
+            using (var ifcStore = IfcStore.Open("4walls1floorSite.ifc", null, 0))
+            {
+                transientXbimFile = ifcStore.Location;
+
+                ifcStore.SaveAs(transientXbimFile);
+                ifcStore.Close();
+            }
+            Assert.IsFalse(File.Exists(transientXbimFile));
         }
 
         [TestMethod] [DeploymentItem("TestFiles")] 

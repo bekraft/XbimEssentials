@@ -315,8 +315,10 @@ namespace Xbim.IO.Memory
         /// <param name="stream">Input stream for step21 text file</param>
         /// <param name="logger">Logger</param>
         /// <param name="progressDel">Progress delegate</param>
+        /// <param name="ignoreTypes">A list of ifc types to skip</param>
         /// <returns>New memory model</returns>
-        public static MemoryModel OpenReadStep21(Stream stream, ILogger logger = null, ReportProgressDelegate progressDel = null, IEnumerable<string> ignoreTypes = null)
+        public static MemoryModel OpenReadStep21(Stream stream, ILogger logger = null, ReportProgressDelegate progressDel = null, 
+            IEnumerable<string> ignoreTypes = null)
         {
             var model = new MemoryModel((IEnumerable<string> schemas) =>
             {
@@ -327,8 +329,11 @@ namespace Xbim.IO.Memory
             return model;
         }
 
-        public virtual void SaveAsXml(Stream stream, XmlWriterSettings xmlSettings, XbimXmlSettings xbimSettings = null, configuration configuration = null, ReportProgressDelegate progress = null)
+        public virtual void SaveAsXml(Stream stream, XmlWriterSettings xmlSettings, XbimXmlSettings xbimSettings = null, 
+            configuration configuration = null, ReportProgressDelegate progress = null)
         {
+            
+
             var schema = Header.FileSchema.Schemas.FirstOrDefault();
             using (var xmlWriter = XmlWriter.Create(stream, xmlSettings))
             {
@@ -343,6 +348,11 @@ namespace Xbim.IO.Memory
                         writer4.Write(this, xmlWriter, GetXmlOrderedEntities(schema));
                         break;
                     default:
+                        if (xbimSettings == null)
+                        {
+                            Logger.LogWarning("No xbimsettings set. Defaulting to Ifc4 Add2");
+                            xbimSettings = XbimXmlSettings.IFC4Add2;
+                        }
                         var writer = new XbimXmlWriter4(xbimSettings);
                         writer.Write(this, xmlWriter);
                         break;
@@ -353,6 +363,7 @@ namespace Xbim.IO.Memory
 
         public static void CalculateModelFactors(IModel model)
         {
+            bool planeAngleSpecified = false;
             double angleToRadiansConversionFactor = 1; //assume radians
             double lengthToMetresConversionFactor = 1; //assume metres
             var instOfType = model.Instances.OfType<IIfcUnitAssignment>();
@@ -385,6 +396,7 @@ namespace Xbim.IO.Memory
                             lengthToMetresConversionFactor = value;
                             break;
                         case IfcUnitEnum.PLANEANGLEUNIT:
+                            planeAngleSpecified = true;
                             angleToRadiansConversionFactor = value;
                             //need to guarantee precision to avoid errors in Boolean operations
                             if (Math.Abs(angleToRadiansConversionFactor - (Math.PI / 180)) < 1e-9)
@@ -407,7 +419,7 @@ namespace Xbim.IO.Memory
                 defaultPrecision = 1e-5;
            // defaultPrecision *= 1.1; //this fixes errors where things are nearly coincidental like faces
             //check if angle units are incorrectly defined, this happens in some old models
-            if (Math.Abs(angleToRadiansConversionFactor - 1) < 1e-10)
+            if (!planeAngleSpecified && Math.Abs(angleToRadiansConversionFactor - 1) < 1e-10)
             {
                 var trimmed = model.Instances.Where<IIfcTrimmedCurve>(trimmedCurve => trimmedCurve.BasisCurve is IIfcConic);
                 if (trimmed.Where(trimmedCurve => trimmedCurve.MasterRepresentation == IfcTrimmingPreference.PARAMETER)
