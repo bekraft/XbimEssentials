@@ -85,6 +85,7 @@ namespace Xbim.Ifc4.Interfaces
         IXbimSolid CreateSolid(IIfcFaceBasedSurfaceModel ifcSurface, ILogger logger = null);
         IXbimSolid CreateSolid(IIfcShellBasedSurfaceModel ifcSurface, ILogger logger = null);
         IXbimSolid CreateSolid(IIfcTriangulatedFaceSet ifcSurface, ILogger logger = null);
+        IXbimSolid CreateAlignment(IIfcAlignment alignment, ILogger logger = null);
         IXbimSolidSet CreateSolidSet(IIfcFaceBasedSurfaceModel ifcSurface, ILogger logger = null);
         IXbimSolidSet CreateSolidSet(IIfcShellBasedSurfaceModel ifcSurface, ILogger logger = null);
         IXbimSolidSet CreateSolidSet(IIfcTriangulatedFaceSet ifcSurface, ILogger logger = null);
@@ -98,6 +99,7 @@ namespace Xbim.Ifc4.Interfaces
         IXbimFace CreateFace(IIfcSurface surface, ILogger logger = null);
         IXbimFace CreateFace(IIfcPlane plane, ILogger logger = null);
         IXbimFace CreateFace(IXbimWire wire, ILogger logger = null);
+        IXbimFace CreateFace(IIfcAlignment2DHorizontal alignment, ILogger logger = null);
 
         //Create Wire
         IXbimWire CreateWire(IIfcCurve curve, ILogger logger = null);
