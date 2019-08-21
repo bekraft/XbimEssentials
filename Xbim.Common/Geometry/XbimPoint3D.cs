@@ -84,17 +84,13 @@ namespace Xbim.Common.Geometry
         public static XbimPoint3D operator *(XbimPoint3D p, XbimMatrix3D m)
         {
             return Multiply(p, m);
-        }
-
-       
+        }     
 
         public static XbimPoint3D Multiply(XbimPoint3D p, XbimMatrix3D m)
         {
             var x = p.X;
             var y = p.Y; 
             var z = p.Z;
-            
-
             
             XbimPoint3D pRet = new XbimPoint3D(m.M11 * x + m.M21 * y + m.M31 * z + m.OffsetX,
                                    m.M12 * x + m.M22 * y + m.M32 * z + m.OffsetY,
@@ -107,16 +103,19 @@ namespace Xbim.Common.Geometry
             z = pRet.Z / affineRatio;
             return new XbimPoint3D(x, y, z);
         }
+
         public static XbimVector3D operator -(XbimPoint3D a, XbimPoint3D b)
         {
             return Subtract(a, b);
         }
+
         public static XbimPoint3D operator -(XbimPoint3D a, XbimVector3D b)
         {
             return new XbimPoint3D(a.X - b.X,
                                     a.Y - b.Y,
                                     a.Z - b.Z);
         }
+
         public static XbimVector3D Subtract(XbimPoint3D a, XbimPoint3D b)
         {
             return new XbimVector3D(a.X - b.X,
@@ -124,8 +123,18 @@ namespace Xbim.Common.Geometry
                                     a.Z - b.Z);
         }
 
+        public double Distance(XbimPoint3D other)
+        {
+            return Math.Sqrt(DistanceSq(other));
+        }
 
-
+        public double DistanceSq(XbimPoint3D other)
+        {
+            double dx = X - other.X;
+            double dy = Y - other.Y;
+            double dz = Z - other.Z;
+            return dx * dx + dy * dy + dz * dz;
+        }
 
         
     }

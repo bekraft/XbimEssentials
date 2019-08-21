@@ -59,9 +59,6 @@
         double Precision { get; set; }
 
         /// <summary>
-        /// Returns the value for one metre in the units of the model
-        /// </summary>
-        /// /// <summary>
         /// The  maximum tolerance under which two given points are still assumed to be identical
         /// </summary>
         double PrecisionMax { get; set; }
