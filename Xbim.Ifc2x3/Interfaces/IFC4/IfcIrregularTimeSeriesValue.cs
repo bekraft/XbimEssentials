@@ -63,7 +63,7 @@ namespace Xbim.Ifc2x3.TimeSeriesResource
                     ListValues, 
                     new ItemSet<IIfcValue>(this, 0, -2), 
                     v => v.ToIfc4(), 
-                    v => v.ToIfc3()));
+                    v => v.ToIfc2x3()));
 			} 
 		}
 

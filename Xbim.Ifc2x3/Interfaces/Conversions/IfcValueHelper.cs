@@ -102,7 +102,7 @@ using IfcWarpingMomentMeasure = Xbim.Ifc2x3.MeasureResource.IfcWarpingMomentMeas
 // ReSharper disable once CheckNamespace
 namespace Xbim.Ifc4.Interfaces
 {
-    public static class IfcValueHelper
+    public static partial class IfcValueHelper
     {
         public static IIfcValue ToIfc4(this IfcValue member)
         {
@@ -309,7 +309,7 @@ namespace Xbim.Ifc4.Interfaces
             }
         }
 
-        public static IfcValue ToIfc3(this IIfcValue member)
+        public static IfcValue ToIfc2x3(this IIfcValue member)
         {
             if (member == null)
                 return null;

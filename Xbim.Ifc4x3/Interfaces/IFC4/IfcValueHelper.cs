@@ -10,7 +10,7 @@ namespace Xbim.Ifc4.Interfaces
     /// <summary>
     /// This helper is using reflection because IfcValue types are identicla between IFC4 and IFC4x3
     /// </summary>
-    public static class IfcValueHelper
+    public static partial class IfcValueHelper
     {
 
         private static ExpressMetaData _ifc4meta;
@@ -29,7 +29,7 @@ namespace Xbim.Ifc4.Interfaces
             return Activator.CreateInstance(type.Type, value.Value) as IIfcValue;
         }
 
-        public static Ifc4x3.MeasureResource.IfcValue ToIfc3(this Ifc4.Interfaces.IIfcValue value)
+        public static Ifc4x3.MeasureResource.IfcValue ToIfc4x3(this Ifc4.Interfaces.IIfcValue value)
         {
             if (value == null)
                 return null;

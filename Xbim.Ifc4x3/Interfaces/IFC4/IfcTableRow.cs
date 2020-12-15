@@ -31,7 +31,7 @@ namespace Xbim.Ifc4x3.UtilityResource
                     RowCells, 
                     new ItemSet<IIfcValue>(this, 0, -1), 
                     v => v.ToIfc4(), 
-                    v => v.ToIfc3()));
+                    v => v.ToIfc4x3()));
 			} 
 		}
 

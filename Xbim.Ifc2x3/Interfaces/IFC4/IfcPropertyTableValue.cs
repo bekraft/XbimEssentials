@@ -28,7 +28,7 @@ namespace Xbim.Ifc2x3.PropertyResource
                     DefiningValues, 
                     new ItemSet<IIfcValue>(this, 0, -3), 
                     v => v.ToIfc4(), 
-                    v => v.ToIfc3()));
+                    v => v.ToIfc2x3()));
 			} 
 		}
 
@@ -45,7 +45,7 @@ namespace Xbim.Ifc2x3.PropertyResource
                     DefinedValues, 
                     new ItemSet<IIfcValue>(this, 0, -4), 
                     v => v.ToIfc4(), 
-                    v => v.ToIfc3()));
+                    v => v.ToIfc2x3()));
 			} 
 		}
 
