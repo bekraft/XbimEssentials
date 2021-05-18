@@ -15,12 +15,14 @@ namespace Xbim.Tessellator
     {
         private readonly IModel _model;
         private readonly XbimGeometryType _geometryType;
+        private readonly bool _reduceLargeCoordinates;
         private readonly ILogger _logger;        
 
-        public XbimTessellator(IModel model, XbimGeometryType geometryType, ILogger logger = null)
+        public XbimTessellator(IModel model, XbimGeometryType geometryType, bool reduceLargeCoordinates = true, ILogger logger = null)
         {
             _model = model;
             _geometryType = geometryType;
+            _reduceLargeCoordinates = reduceLargeCoordinates;
             _logger = logger;
         }
 
@@ -255,6 +257,14 @@ namespace Xbim.Tessellator
             return shapeGeometry;
         }
 
+        private bool IsLarge(double coordinate)
+        {
+            if (!_reduceLargeCoordinates)
+                return false;
+
+            return coordinate > _model.ModelFactors.OneMilliMeter * 999999;
+        }
+
         private XbimShapeGeometry ToTextShapeGeometry(params XbimTriangulatedMesh[] meshes)
         {
             var shapeGeometry = new XbimShapeGeometry();
@@ -343,11 +353,6 @@ namespace Xbim.Tessellator
             }
             return shapeGeometry;
 
-        }
-
-        private bool IsLarge(double coordinate)
-        {
-            return coordinate > _model.ModelFactors.OneMilliMeter * 999999;
         }
 
         private XbimShapeGeometry MeshPolyhedronText(IEnumerable<IList<IIfcFace>> facesList, int entityLabel, float precision, bool isIntentionallyClosed)
